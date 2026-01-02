@@ -1,0 +1,74 @@
+import React, { useState, useEffect } from 'react';
+import { Loader2, Maximize2 } from 'lucide-react';
+
+interface ImageDisplayProps {
+  seed: number;
+  isLoading: boolean;
+  onLoad: () => void;
+}
+
+export const ImageDisplay: React.FC<ImageDisplayProps> = ({ seed, isLoading, onLoad }) => {
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  // Determine URL based on seed. Using Picsum for high quality placeholders.
+  // 1920x1080 usually covers most responsive needs nicely.
+  const imageUrl = `https://picsum.photos/seed/${seed}/1920/1080`;
+
+  // Reset zoom when image changes
+  useEffect(() => {
+    setIsZoomed(false);
+  }, [seed]);
+
+  const toggleZoom = () => setIsZoomed(!isZoomed);
+
+  return (
+    <div className={`
+      relative w-full rounded-2xl overflow-hidden shadow-2xl bg-gray-200 transition-all duration-500 ease-in-out
+      ${isZoomed ? 'fixed inset-0 z-50 rounded-none h-screen m-0' : 'aspect-video md:aspect-[16/9] lg:aspect-[21/9] h-auto'}
+    `}>
+      
+      {/* Loading Skeleton / Spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10 animate-pulse">
+          <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+          <p className="text-gray-400 font-medium text-sm tracking-wider">CHARGEMENT...</p>
+        </div>
+      )}
+
+      {/* Image Element */}
+      <img
+        src={imageUrl}
+        alt="Random scenery from Picsum"
+        onLoad={onLoad}
+        className={`
+          w-full h-full object-cover transition-opacity duration-700 ease-out
+          ${isLoading ? 'opacity-0' : 'opacity-100'}
+          ${isZoomed ? 'object-contain bg-black' : 'hover:scale-105 transition-transform duration-700'}
+        `}
+      />
+
+      {/* Overlay controls (only visible when not loading) */}
+      {!isLoading && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex justify-end items-end">
+          <button 
+            onClick={toggleZoom}
+            className="p-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/40 transition-colors text-white"
+            title={isZoomed ? "Réduire" : "Agrandir"}
+          >
+            <Maximize2 className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+      
+      {/* Close zoom button */}
+      {isZoomed && (
+        <button 
+           onClick={toggleZoom}
+           className="absolute top-4 right-4 p-3 bg-black/50 text-white rounded-full backdrop-blur-md z-50 hover:bg-black/70"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      )}
+    </div>
+  );
+};
